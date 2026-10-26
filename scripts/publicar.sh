@@ -16,7 +16,7 @@
 #   DEPLOY_BASE=/home/reichel/Pelis/music-catalog
 #   DEPLOY_BRANCH=main
 #   DEPLOY_SSH_PASS=...          # solo si no usas clave SSH; requiere sshpass
-#   PUBLIC_URL=https://musica.reicheleria.com
+#   PUBLIC_URL=https://musica.tudominio.com
 
 set -euo pipefail
 
@@ -32,7 +32,7 @@ fi
 REMOTE="${DEPLOY_REMOTE:-reichel@100.75.218.102}"
 REMOTE_BASE="${DEPLOY_BASE:-/home/reichel/Pelis/music-catalog}"
 BRANCH="${DEPLOY_BRANCH:-main}"
-PUBLIC_URL="${PUBLIC_URL:-https://musica.reicheleria.com}"
+PUBLIC_URL="${PUBLIC_URL:-http://localhost:5001}"
 
 MODE="git"
 DO_PUSH=1

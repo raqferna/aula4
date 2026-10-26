@@ -23,4 +23,4 @@ HTTP_CODE="$(curl -s -o /dev/null -w '%{http_code}' http://localhost:5001/ || tr
 echo "HTTP local: ${HTTP_CODE}"
 docker compose ps
 echo ""
-echo "Listo. Recarga https://musica.reicheleria.com con Ctrl+Shift+R"
+echo "Listo. Recarga la web del catálogo con Ctrl+Shift+R"
