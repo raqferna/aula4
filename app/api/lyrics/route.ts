@@ -1,5 +1,6 @@
 import fsp from "node:fs/promises";
 import { NextRequest, NextResponse } from "next/server";
+import { requireAdmin } from "@/lib/adminAuth";
 import { getMusicDir, safeBasename } from "@/lib/musicDir";
 import { generatePdfFromText } from "@/lib/lyricsPdf";
 import {
@@ -61,6 +62,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const denied = requireAdmin(req);
+  if (denied) return denied;
+
   try {
     const body = (await req.json()) as Body;
     if (!body?.baseName) {

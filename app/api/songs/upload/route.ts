@@ -1,6 +1,7 @@
 import fsp from "node:fs/promises";
 import path from "node:path";
 import { NextRequest, NextResponse } from "next/server";
+import { requireAdmin } from "@/lib/adminAuth";
 import { isAudioFilename, maxUploadBytes } from "@/lib/audio";
 import { getMusicDir, safeBasename } from "@/lib/musicDir";
 
@@ -35,6 +36,9 @@ async function uniqueFilename(dir: string, name: string): Promise<string> {
 }
 
 export async function POST(req: NextRequest) {
+  const denied = requireAdmin(req);
+  if (denied) return denied;
+
   try {
     const dir = await getMusicDir();
     const formData = await req.formData();

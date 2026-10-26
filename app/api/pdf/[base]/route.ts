@@ -1,5 +1,6 @@
 import fsp from "node:fs/promises";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { requireAdmin } from "@/lib/adminAuth";
 import { getMusicDir, safeBasename } from "@/lib/musicDir";
 import { deleteLyricsSidecar, lyricsPdfPath } from "@/lib/lyricsStorage";
 
@@ -34,9 +35,12 @@ export async function GET(
 }
 
 export async function DELETE(
-  _req: Request,
+  req: NextRequest,
   ctx: { params: Promise<{ base: string }> },
 ) {
+  const denied = requireAdmin(req);
+  if (denied) return denied;
+
   try {
     const { base } = await ctx.params;
     const baseName = safeBasename(decodeURIComponent(base));

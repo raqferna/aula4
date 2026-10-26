@@ -28,6 +28,7 @@ yarn-error.log*
 .env
 .env.tunnel
 .env.deploy
+.env.aula
 
 # cloudflare tunnel (credenciales locales)
 cloudflared/*.json
@@ -44,6 +45,9 @@ next-env.d.ts.bak
 # music & generated files (no commitear contenidos del usuario)
 /music/*
 !/music/.gitkeep
+
+# Canciones del aula de canto (otra carpeta, no mezclar con el catálogo)
+/music-aula/
 
 # APK Android (se publica con scripts/publish-apk desde music-lyrics-android)
 /public/android/*.apk

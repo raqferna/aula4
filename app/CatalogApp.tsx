@@ -2,7 +2,9 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { matchesSearch } from "@/lib/artistGroups";
+import type { SitePublicConfig } from "@/lib/siteConfig";
 import type { SongGroup } from "@/lib/types";
+import AdminLogin from "./components/AdminLogin";
 import AddStemsModal from "./components/AddStemsModal";
 import AddVocalModal from "./components/AddVocalModal";
 import AddInstrumentalModal from "./components/AddInstrumentalModal";
@@ -18,7 +20,13 @@ import { Disc, Search, FolderOpen, Smartphone, GraduationCap } from "./component
 
 type ApiResponse = { dir: string; groups: SongGroup[] };
 
-export default function CatalogApp() {
+type SessionResponse = SitePublicConfig & { admin?: boolean };
+
+type Props = {
+  initialSite: SitePublicConfig;
+};
+
+export default function CatalogApp({ initialSite }: Props) {
   const [groups, setGroups] = useState<SongGroup[]>([]);
   const [musicDir, setMusicDir] = useState<string>("");
   const [loading, setLoading] = useState(true);
@@ -33,7 +41,14 @@ export default function CatalogApp() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [actionGroup, setActionGroup] = useState<SongGroup | null>(null);
+  const [admin, setAdmin] = useState(!initialSite.adminRequired);
+  const [adminRequired, setAdminRequired] = useState(initialSite.adminRequired);
+  const [siteMode, setSiteMode] = useState(initialSite.siteMode);
+  const [siteTitle, setSiteTitle] = useState(initialSite.siteTitle);
+  const [siteSubtitle, setSiteSubtitle] = useState(initialSite.siteSubtitle);
+  const [showLogin, setShowLogin] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const canManage = admin;
 
   async function refresh(preferGroupKey?: string | null): Promise<SongGroup[]> {
     setLoading(true);
@@ -80,6 +95,24 @@ export default function CatalogApp() {
     void refresh();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    void fetch("/api/admin/session", { cache: "no-store" })
+      .then((res) => res.json())
+      .then((data: SessionResponse) => {
+        setAdmin(Boolean(data.admin));
+        setAdminRequired(Boolean(data.adminRequired));
+        if (data.siteMode === "aula" || data.siteMode === "catalogo") setSiteMode(data.siteMode);
+        if (typeof data.siteTitle === "string" && data.siteTitle) setSiteTitle(data.siteTitle);
+        if (typeof data.siteSubtitle === "string" && data.siteSubtitle) setSiteSubtitle(data.siteSubtitle);
+      })
+      .catch(() => undefined);
+  }, []);
+
+  async function logout() {
+    await fetch("/api/admin/logout", { method: "POST" });
+    setAdmin(false);
+  }
 
   const filtered = useMemo(() => {
     const q = query.trim();
@@ -137,14 +170,31 @@ export default function CatalogApp() {
             </div>
             <div>
               <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">
-                Catálogo Musical
+                {siteTitle}
               </h1>
-              <p className="text-sm text-white/60">
-                Importa canciones, alterna con/sin voz y añade letras en PDF.
-              </p>
+              <p className="text-sm text-white/60">{siteSubtitle}</p>
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2 text-xs text-white/60">
+            {adminRequired && !admin ? (
+              <button
+                type="button"
+                onClick={() => setShowLogin(true)}
+                className="inline-flex items-center gap-1.5 rounded-xl bg-white/5 px-3 py-1.5 text-white/80 transition hover:bg-white/10 hover:text-white"
+              >
+                Entrar
+              </button>
+            ) : null}
+            {adminRequired && admin ? (
+              <button
+                type="button"
+                onClick={() => void logout()}
+                className="inline-flex items-center gap-1.5 rounded-xl bg-white/5 px-3 py-1.5 text-white/80 transition hover:bg-white/10 hover:text-white"
+              >
+                Salir
+              </button>
+            ) : null}
+            {siteMode === "aula" ? null : (
             <a
               href="/curso"
               className="inline-flex items-center gap-1.5 rounded-xl bg-white/5 px-3 py-1.5 text-white/80 transition hover:bg-white/10 hover:text-white"
@@ -152,6 +202,7 @@ export default function CatalogApp() {
               <GraduationCap className="h-4 w-4 text-violet-300" />
               Cursos
             </a>
+            )}
             <a
               href="/android"
               className="inline-flex items-center gap-1.5 rounded-xl bg-white/5 px-3 py-1.5 text-white/80 transition hover:bg-white/10 hover:text-white"
@@ -159,22 +210,28 @@ export default function CatalogApp() {
               <Smartphone className="h-4 w-4 text-violet-300" />
               App Android
             </a>
-            <FolderOpen className="h-4 w-4 text-violet-300" />
-            <code className="rounded-lg bg-white/5 px-2 py-1 text-white/80">
-              {musicDir || "Cargando…"}
-            </code>
+            {canManage ? (
+              <>
+                <FolderOpen className="h-4 w-4 text-violet-300" />
+                <code className="rounded-lg bg-white/5 px-2 py-1 text-white/80">
+                  {musicDir || "Cargando…"}
+                </code>
+              </>
+            ) : null}
           </div>
         </header>
 
         <div className="grid gap-5 lg:grid-cols-[minmax(320px,420px)_1fr]">
           <section className="glass rounded-3xl p-4 md:p-5 animate-fade-up">
-            <div className="space-y-5">
-              <YoutubeImporter onImported={handleImported} />
-              <div className="border-t border-white/10" />
-              <MusicUploader onUploaded={handleUploaded} compact />
-            </div>
+            {canManage ? (
+              <div className="mb-5 space-y-5">
+                <YoutubeImporter onImported={handleImported} />
+                <div className="border-t border-white/10" />
+                <MusicUploader onUploaded={handleUploaded} compact />
+              </div>
+            ) : null}
 
-            <div className="relative mb-4 mt-5">
+            <div className="relative mb-4">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/50" />
               <input
                 value={query}
@@ -203,11 +260,12 @@ export default function CatalogApp() {
                 {error}
               </div>
             ) : groups.length === 0 && !loading ? (
-              <EmptyState dir={musicDir} />
+              <EmptyState dir={musicDir} canManage={canManage} />
             ) : (
               <SongList
                 groups={filtered}
                 selectedGroupKey={selectedGroupKey}
+                canManage={canManage}
                 onSelect={handleSelect}
                 onRequestLyrics={(g) => {
                   setSelectedGroupKey(g.groupKey);
@@ -241,6 +299,7 @@ export default function CatalogApp() {
             <div className="grow glass-strong rounded-3xl p-3 md:p-4 animate-fade-up">
               <PdfViewer
                 group={selected}
+                canManage={canManage}
                 onAddLyrics={() => setShowLyricsModal(true)}
                 onEditLyrics={() => setShowLyricsModal(true)}
               />
@@ -275,7 +334,17 @@ export default function CatalogApp() {
         </div>
       </div>
 
-      {showLyricsModal && selected ? (
+      {showLogin ? (
+        <AdminLogin
+          onClose={() => setShowLogin(false)}
+          onSuccess={() => {
+            setShowLogin(false);
+            setAdmin(true);
+          }}
+        />
+      ) : null}
+
+      {canManage && showLyricsModal && selected ? (
         <LyricsModal
           group={selected}
           onClose={() => setShowLyricsModal(false)}
@@ -286,7 +355,7 @@ export default function CatalogApp() {
         />
       ) : null}
 
-      {showVocalModal && selected ? (
+      {canManage && showVocalModal && selected ? (
         <AddVocalModal
           group={selected}
           onClose={() => setShowVocalModal(false)}
@@ -298,7 +367,7 @@ export default function CatalogApp() {
         />
       ) : null}
 
-      {showInstrumentalModal && selected ? (
+      {canManage && showInstrumentalModal && selected ? (
         <AddInstrumentalModal
           group={selected}
           onClose={() => setShowInstrumentalModal(false)}
@@ -310,7 +379,7 @@ export default function CatalogApp() {
         />
       ) : null}
 
-      {showStemsModal && selected ? (
+      {canManage && showStemsModal && selected ? (
         <AddStemsModal
           group={selected}
           onClose={() => setShowStemsModal(false)}
@@ -320,7 +389,7 @@ export default function CatalogApp() {
         />
       ) : null}
 
-      {showEditModal && actionGroup ? (
+      {canManage && showEditModal && actionGroup ? (
         <EditSongModal
           group={actionGroup}
           onClose={() => {
@@ -340,7 +409,7 @@ export default function CatalogApp() {
         />
       ) : null}
 
-      {showDeleteModal && actionGroup ? (
+      {canManage && showDeleteModal && actionGroup ? (
         <DeleteSongModal
           group={actionGroup}
           onClose={() => {
@@ -361,7 +430,15 @@ export default function CatalogApp() {
   );
 }
 
-function EmptyState({ dir }: { dir: string }) {
+function EmptyState({ dir, canManage }: { dir: string; canManage: boolean }) {
+  if (!canManage) {
+    return (
+      <div className="rounded-2xl border border-dashed border-white/15 bg-white/[0.02] p-4 text-center text-sm text-white/60">
+        <p className="text-white/80">Aún no hay canciones.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="rounded-2xl border border-dashed border-white/15 bg-white/[0.02] p-4 text-center text-sm text-white/60">
       <p className="mb-1 text-white/80">Tu catálogo está vacío.</p>

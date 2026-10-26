@@ -68,9 +68,41 @@ cp .env.tunnel.example .env.tunnel
 ## Despliegue diario
 
 ```bash
-./deploy-docker.sh          # reinicia la app
+./deploy-docker.sh          # reinicia el catálogo (puerto 5001). No toca el aula.
 # NO reinicies el túnel — la URL no cambia
 ```
+
+## Aula de canto (otro sitio, otra carpeta)
+
+El aula es el mismo programa en otro contenedor. Las canciones van a `music-aula`, no a `music`. El catálogo no se mezcla ni se reinicia al desplegar el aula.
+
+En el HP, dentro del repo:
+
+```bash
+cp .env.aula.example .env.aula
+# Edita AULA_ADMIN_PASSWORD. Opcional: AULA_SITE_TITLE, AULA_MUSIC_HOST_PATH.
+
+./scripts/deploy-aula.sh
+```
+
+Queda en `http://localhost:5002`. Quien abre la URL puede escuchar (con voz, sin voz y letra). Para subir, importar de YouTube, quitar la voz o borrar hace falta esa contraseña: botón **Entrar**. Sin `ADMIN_PASSWORD` el catálogo sigue abierto, como hasta ahora.
+
+### Segundo hostname en el mismo túnel
+
+No hace falta otro túnel. En el túnel que ya apunta el catálogo a `localhost:5001`, añade otro **Public Hostname**:
+
+| Campo | Valor |
+|-------|--------|
+| Subdomain | `aula` (o el que quieras) |
+| Domain | tu dominio |
+| Service | HTTP |
+| URL | `localhost:5002` |
+
+Quedará algo como `https://aula.tudominio.com`.
+
+Si usas `cloudflared/config.yml` en lugar del token, descomenta el hostname del aula en `cloudflared/config.yml.example` y reinicia el túnel solo en ese caso.
+
+Access en ese hostname es opcional: puedes dejar entrar a la clase por email. La contraseña de admin es aparte y solo sirve para añadir canciones. Si no pones Access, cualquiera con la URL puede escuchar; no puede encolar trabajos de quitar voz ni subir archivos.
 
 Reinicia el túnel solo si falla o cambias el token:
 
@@ -104,7 +136,8 @@ Para Docker con config en lugar de token, monta `config.yml` y el JSON en un con
 
 ## Seguridad
 
-- **Access** protege el acceso web; sin él, cualquiera con la URL puede usar importación de YouTube y subir archivos.
+- **Access** protege el acceso web del catálogo; sin él, cualquiera con la URL del catálogo puede usar importación de YouTube y subir archivos.
+- En el **aula**, aunque la URL sea accesible, añadir o procesar canciones exige la contraseña de `.env.aula`. Escuchar no.
 - No indexes el sitio si no quieres que aparezca en Google (Access ya impide el acceso anónimo).
 - `.env.tunnel` contiene secretos: no lo subas a git.
 

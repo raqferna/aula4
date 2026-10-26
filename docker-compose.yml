@@ -22,3 +22,32 @@ services:
     volumes:
       - ${QUITAR_VOZ_HOST_PATH:-../quitarvoces}:/quitarvoces-root:ro
       - ${MUSIC_HOST_PATH:-./music}:/music-dir
+
+  # Segundo sitio: curso de canto. No arranca con deploy-docker.sh (hace falta el perfil aula).
+  aula:
+    profiles:
+      - aula
+    image: mi-catalogo-musica
+    container_name: app-aula
+    restart: unless-stopped
+    ports:
+      - "5002:5001"
+    environment:
+      HOST: "0.0.0.0"
+      PORT: "5001"
+      MUSIC_DIR: /music-dir
+      QUITAR_VOZ_PATH: /quitarvoces-root/quitar-voz
+      PYTHONPATH: /quitarvoces-root/quitar-voz
+      SEPARATION_MODEL: fast
+      SITE_MODE: aula
+      SITE_TITLE: ${AULA_SITE_TITLE:-Aula de canto}
+      ADMIN_PASSWORD: ${AULA_ADMIN_PASSWORD:-}
+      OMP_NUM_THREADS: "2"
+      MKL_NUM_THREADS: "2"
+      OPENBLAS_NUM_THREADS: "2"
+      NUMEXPR_NUM_THREADS: "2"
+      ONNXRUNTIME_INTRA_OP_NUM_THREADS: "2"
+      ONNXRUNTIME_INTER_OP_NUM_THREADS: "1"
+    volumes:
+      - ${QUITAR_VOZ_HOST_PATH:-../quitarvoces}:/quitarvoces-root:ro
+      - ${AULA_MUSIC_HOST_PATH:-./music-aula}:/music-dir

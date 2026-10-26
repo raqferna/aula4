@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireAdmin } from "@/lib/adminAuth";
 import { getMusicDir } from "@/lib/musicDir";
 import {
   deleteSongGroup,
@@ -14,6 +15,9 @@ export async function DELETE(
   req: NextRequest,
   ctx: { params: Promise<{ groupKey: string }> },
 ) {
+  const denied = requireAdmin(req);
+  if (denied) return denied;
+
   try {
     const { groupKey } = await ctx.params;
     const decoded = decodeURIComponent(groupKey);
@@ -43,6 +47,9 @@ export async function PATCH(
   req: NextRequest,
   ctx: { params: Promise<{ groupKey: string }> },
 ) {
+  const denied = requireAdmin(req);
+  if (denied) return denied;
+
   try {
     const { groupKey } = await ctx.params;
     const decoded = decodeURIComponent(groupKey);

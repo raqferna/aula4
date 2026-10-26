@@ -57,7 +57,23 @@ npm start
 - `app/api/lyrics/search` – busca letras en internet (LRCLib) y obtiene el texto completo.
 - `lib/musicDir.ts` – resuelve la carpeta de música y sanea nombres de archivo.
 
+## Aula de canto
+
+Segundo sitio, aparte del catálogo: otra carpeta (`music-aula`), puerto `5002`
+y contraseña solo para añadir canciones. Quien entra sin esa contraseña puede
+escuchar y ver la letra.
+
+```bash
+cp .env.aula.example .env.aula
+./scripts/deploy-aula.sh
+```
+
+El hostname público (mismo túnel, `localhost:5002`) está en
+[docs/CLOUDFLARE-ACCESS.md](docs/CLOUDFLARE-ACCESS.md). `./deploy-docker.sh`
+sigue reiniciando solo el catálogo.
+
 ## Notas de seguridad
 
 Esta app está pensada para uso **local**: el backend lee y escribe en una
 carpeta de tu máquina. No la expongas públicamente sin añadir autenticación.
+En el aula, `ADMIN_PASSWORD` cierra las altas aunque la URL se pueda abrir.

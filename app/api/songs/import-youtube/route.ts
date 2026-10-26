@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireAdmin } from "@/lib/adminAuth";
 import { isYoutubeUrl } from "@/lib/audio";
 import { getMusicDir } from "@/lib/musicDir";
 import { separationModelLabel } from "@/lib/separationModel";
@@ -31,6 +32,9 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const denied = requireAdmin(req);
+  if (denied) return denied;
+
   try {
     const body = (await req.json()) as { url?: string; urls?: string[] };
     const rawUrls = body.urls?.length ? body.urls : body.url ? [body.url] : [];

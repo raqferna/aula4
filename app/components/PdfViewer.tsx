@@ -8,9 +8,10 @@ type Props = {
   group: SongGroup | null;
   onAddLyrics: () => void;
   onEditLyrics: () => void;
+  canManage?: boolean;
 };
 
-export default function PdfViewer({ group, onAddLyrics, onEditLyrics }: Props) {
+export default function PdfViewer({ group, onAddLyrics, onEditLyrics, canManage = true }: Props) {
   const src = useMemo(() => {
     if (!group?.hasLyrics) return null;
     return `/api/pdf/${encodeURIComponent(group.groupKey)}?v=${group.modifiedAt}`;
@@ -35,17 +36,23 @@ export default function PdfViewer({ group, onAddLyrics, onEditLyrics }: Props) {
           <h3 className="text-base font-medium text-white/90">
             Esta canción no tiene letra todavía
           </h3>
-          <p className="mt-1 text-sm text-white/50">
-            Busca la letra en internet, pega el texto manualmente o descarga un
-            PDF desde una URL. Se guardará para las versiones con y sin voz.
-          </p>
-          <button
-            onClick={onAddLyrics}
-            className="mt-4 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-violet-500 to-cyan-400 px-4 py-2 text-sm font-medium text-white shadow-lg shadow-violet-500/30 transition hover:scale-[1.02]"
-          >
-            <Plus className="h-4 w-4" />
-            Añadir letra
-          </button>
+          {canManage ? (
+            <>
+              <p className="mt-1 text-sm text-white/50">
+                Busca la letra en internet, pega el texto manualmente o descarga un
+                PDF desde una URL. Se guardará para las versiones con y sin voz.
+              </p>
+              <button
+                onClick={onAddLyrics}
+                className="mt-4 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-violet-500 to-cyan-400 px-4 py-2 text-sm font-medium text-white shadow-lg shadow-violet-500/30 transition hover:scale-[1.02]"
+              >
+                <Plus className="h-4 w-4" />
+                Añadir letra
+              </button>
+            </>
+          ) : (
+            <p className="mt-1 text-sm text-white/50">Cuando haya letra, se verá aquí.</p>
+          )}
         </div>
       </div>
     );
@@ -59,13 +66,15 @@ export default function PdfViewer({ group, onAddLyrics, onEditLyrics }: Props) {
           <span className="truncate">{group.title} — letra</span>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={onEditLyrics}
-            className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/70 transition hover:bg-white/10"
-          >
-            Editar
-          </button>
+          {canManage ? (
+            <button
+              type="button"
+              onClick={onEditLyrics}
+              className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/70 transition hover:bg-white/10"
+            >
+              Editar
+            </button>
+          ) : null}
           <a
             href={src ?? "#"}
             target="_blank"

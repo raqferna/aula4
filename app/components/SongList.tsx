@@ -15,6 +15,7 @@ type Props = {
   onRequestStems: (group: SongGroup) => void;
   onRequestEdit: (group: SongGroup) => void;
   onRequestDelete: (group: SongGroup) => void;
+  canManage?: boolean;
 };
 
 function formatSize(bytes: number) {
@@ -35,6 +36,7 @@ function SongRow({
   onRequestStems,
   onRequestEdit,
   onRequestDelete,
+  canManage,
 }: {
   group: SongGroup;
   active: boolean;
@@ -45,6 +47,7 @@ function SongRow({
   onRequestStems: (group: SongGroup) => void;
   onRequestEdit: (group: SongGroup) => void;
   onRequestDelete: (group: SongGroup) => void;
+  canManage: boolean;
 }) {
   const { songTitle } = parseArtistTitle(group.groupKey);
   const displayTitle = formatLabel(songTitle);
@@ -87,6 +90,7 @@ function SongRow({
             <span className="text-white/35 normal-case">{formatSize(group.size)}</span>
           </div>
         </div>
+        {canManage ? (
         <div className="flex shrink-0 flex-col items-end gap-1">
           <div className="flex items-center gap-1">
             <button
@@ -178,6 +182,7 @@ function SongRow({
             </button>
           ) : null}
         </div>
+        ) : null}
       </div>
     </li>
   );
@@ -193,6 +198,7 @@ export default function SongList({
   onRequestStems,
   onRequestEdit,
   onRequestDelete,
+  canManage = true,
 }: Props) {
   const sections = useMemo(() => groupByArtist(groups), [groups]);
 
@@ -230,6 +236,7 @@ export default function SongList({
                 onRequestStems={onRequestStems}
                 onRequestEdit={onRequestEdit}
                 onRequestDelete={onRequestDelete}
+                canManage={canManage}
               />
             ))}
           </ul>
